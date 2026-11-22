@@ -1,7 +1,9 @@
-# Nu, Pogodi! 2: World Tour & Time Chaos
+﻿# Nu, Pogodi! 2: World Tour & Time Chaos
 
 A free, fan-made 3D slapstick adventure for the browser (three.js, no build step) and the sequel to
 *Nu, Pogodi! The Grand Chase*. Two rivals, six worlds, one broken time machine.
+
+**Time to beat: 33:31.01 - 29:20.56**
 
 **Honest scope note:** the original design pitch called for ~15 hours. This build contains the complete structure and
 all six worlds, but each world is a compact hub. A first playthrough takes roughly **1–1.5 hours** (more for 100% of the carrots).
