@@ -1,0 +1,51 @@
+<!doctype html><meta charset="utf-8"><title>sim</title>
+<script type="importmap">{ "imports": { "three": "../vendor/three.module.js" } }</script>
+<div style="display:none"><span id="hud-title"></span><span id="hud-info"></span><div id="hint"></div><div id="toast"></div><div id="objectives"></div><div id="caption"></div>
+<div id="bar-a"><span></span><div><i></i></div></div><div id="bar-b"><span></span><div><i></i></div></div></div>
+<div id="hud"></div><pre id="out">running</pre>
+<script type="module">
+import { THREE, input, endFrame } from '../js/common.js';
+import * as W from '../js/worlds.js';
+import { Runner } from '../js/runner.js';
+import { Duel } from '../js/duel.js';
+import { RopeBoss, WeightLift, RetroEggs, Versus } from '../js/minis.js';
+import { Cutscene, CUTSCENES } from '../js/cutscene.js';
+
+const q = new URLSearchParams(location.search); const t = q.get('t');
+let won = false, lost = '', err = '', steps = 0;
+const cam = new THREE.PerspectiveCamera();
+const ctx = { camera: cam, win() { won = true; }, lose(m) { lost = m; } };
+const keys = ['KeyW', 'KeyA', 'KeyS', 'KeyD'];
+let lv;
+try {
+  if (t === 'studio') lv = new Runner(ctx, W.studioChase());
+  if (t === 'velo') lv = new Runner(ctx, W.velodrome());
+  if (t === 'boar') lv = new Runner(ctx, W.boarRide());
+  if (t === 'zmey') lv = new Duel(ctx, W.ZMEY);
+  if (t === 'mega') lv = new Duel(ctx, W.MEGA);
+  if (t === 'rope') lv = new RopeBoss(ctx);
+  if (t === 'lift') lv = new WeightLift(ctx);
+  if (t === 'retro') lv = new RetroEggs(ctx);
+  if (t === 'versus') lv = new Versus(ctx);
+  if (t.startsWith('cut')) lv = new Cutscene(ctx, CUTSCENES[t.slice(4)]);
+  if (lv.cfg && lv.cfg.length) { lv.cfg.hitPenalty = 0; lv.cfg.gapMax = 99; lv.gap = 50; }
+  const max = t.startsWith('cut') ? 60 * 60 : 60 * 150;
+  for (; steps < max && !won && !lost; steps++) {
+    input.down = {};
+    if (lv.cfg && lv.cfg.length) { lv.gap = Math.max(lv.gap, 8); if (steps % 50 === 0) input.hit.Space = true; if (steps % 90 === 0) input.hit.KeyA = true; if (steps % 130 === 0) input.hit.KeyD = true; }
+    else if ((t === 'zmey' || t === 'mega') && q.has('smart')) {
+      lv.lives = 999; const pk = lv.pickups[0]; const tx = pk ? pk.position.x : 0, tz = pk ? pk.position.z : 8;
+      if (Math.abs(tx - lv.pos.x) > 0.5) input.down[tx > lv.pos.x ? 'KeyD' : 'KeyA'] = true; if (Math.abs(tz - lv.pos.z) > 0.5) input.down[tz > lv.pos.z ? 'KeyS' : 'KeyW'] = true;
+      if (steps % 15 === 0) input.hit.Space = true; if (steps % 30 === 0) input.hit.KeyE = true; if (steps % 500 === 0) input.hit.Tab = true;
+    }
+    else if (t === 'zmey' || t === 'mega') { input.down[keys[Math.floor(steps / 40) % 4]] = true; if (steps % 20 === 0) input.hit.Space = true; if (steps % 70 === 0) input.hit.KeyE = true; if (steps % 300 === 0) input.hit.Tab = true; }
+    else if (t === 'rope') { for (const n of lv.notes) if (!n.done && n.m && Math.abs(lv.clock - n.t) < 0.05) { const k = ['KeyA', 'KeyS', 'KeyD'][n.lane]; input.hit[k] = true; } }
+    else if (t === 'lift') { if (steps % 4 === 0) input.hit[(steps / 4) % 2 ? 'KeyA' : 'KeyD'] = true; }
+    else if (t === 'retro') { for (const e of lv.eggs) if (e.s >= 3) { lv.pos = e.ch; } }
+    else if (t === 'versus') { input.down[keys[Math.floor(steps / 30) % 4]] = true; input.down.ArrowLeft = steps % 200 < 100; }
+    lv.update(1 / 60); endFrame();
+    if (lv.render && steps === 5) { /* skip render */ }
+  }
+} catch (e) { err = e.stack.split('\n').slice(0, 3).join(' | '); }
+document.getElementById('out').textContent = `RESULT ${t} won=${won} lost=${lost} steps=${steps} bearHp=${lv && lv.bearHp} hp=${lv && lv.hp} err=${err}`;
+</script>

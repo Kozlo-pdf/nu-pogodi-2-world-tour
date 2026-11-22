@@ -1,0 +1,81 @@
+<!doctype html><meta charset="utf-8"><title>hubtest</title>
+<script type="importmap">{ "imports": { "three": "../vendor/three.module.js" } }</script>
+<div style="display:none"><span id="hud-title"></span><span id="hud-info"></span><div id="hint"></div><div id="toast"></div><div id="objectives"></div><div id="caption"></div>
+<div id="bar-a"><span></span><div><i></i></div></div><div id="bar-b"><span></span><div><i></i></div></div></div>
+<pre id="out">running</pre>
+<script type="module">
+import { THREE, input, endFrame } from '../js/common.js';
+import { save } from '../js/save.js';
+import * as W from '../js/worlds.js';
+
+const q = new URLSearchParams(location.search); const test = q.get('t');
+const cam = new THREE.PerspectiveCamera(); let won = false;
+const ctx = { camera: cam, save, win() { won = true; }, lose() {}, play(spec, cb) { ctx.lastPlay = spec; cb(true); } };
+const press = (k) => { input.hit[k] = true; input.down[k] = true; };
+const out = [];
+const step = (lv, n, fn) => { for (let i = 0; i < n; i++) { input.down = {}; if (fn) fn(i); lv.update(1 / 60); endFrame(); } };
+
+function wallClimb(world, startX, startZ, ledgeX, ledgeY) {
+  const lv = world(ctx); lv.pos.set(startX, 0.1, startZ); lv.chars.hare.pos.copy(lv.pos);
+  let lastKick = 1, hold = 'KeyA', maxY = 0, reached = false; const tr = [];
+  step(lv, 60 * 14, (i) => {
+    if (lv.pos.y > ledgeY - 0.3) hold = 'KeyD';
+    input.down[hold] = true;
+    if (lv.grounded) { press('Space'); hold = 'KeyA'; }
+    else if (lv.wallT > 0) { press('Space'); lastKick = lv.wallDir; hold = lastKick > 0 ? 'KeyD' : 'KeyA'; }
+    maxY = Math.max(maxY, lv.pos.y); if (i % 10 === 0 && i < 400) tr.push(i + ':' + lv.pos.x.toFixed(1) + ',' + lv.pos.y.toFixed(1) + (lv.grounded ? 'g' : '') + (lv.wallT > 0 ? 'w' : ''));
+    if (lv.pos.y >= ledgeY + 0.2 && lv.pos.x >= ledgeX) reached = true;
+    if (reached) input.down = {};
+  });
+  return { tr: tr.join(' '), maxY: +maxY.toFixed(1), x: +lv.pos.x.toFixed(1), y: +lv.pos.y.toFixed(1), onLedge: reached };
+}
+
+function grapple(world, startPos, anchorsNeeded, target) {
+  const lv = world(ctx); lv.switchChar && (lv.unlocked.wolf = true);
+  lv.switchChar(); lv.pos.set(...startPos); lv.face = Math.PI; lv.chars.wolf.pos.copy(lv.pos);
+  let f = 0, minZ = 0; const trace = [];
+  step(lv, 60 * 6, (i) => {
+    if (i === 20) press('KeyF');
+    if (!lv.hook && !lv.grounded && f < anchorsNeeded - 1 && lv.vel.y !== 0 && i > 30) { press('KeyF'); f++; }
+    minZ = Math.min(minZ, lv.pos.z);
+    if (i % 8 === 0 && i < 200) trace.push(i + ':' + lv.pos.toArray().map((v) => v.toFixed(1)).join(',') + (lv.hook ? 'H' : '') + (lv.grounded ? 'g' : ''));
+  });
+  return { trace: trace.join(' '), pos: lv.pos.toArray().map((v) => +v.toFixed(1)), grounded: lv.grounded, ok: lv.grounded && target(lv.pos) };
+}
+
+try {
+  if (test === 'carrots') {
+    const worlds = [W.tvStudio, W.olympics, W.fairytale, W.island, W.museum, W.dacha]; const counts = worlds.map((w) => w(ctx).hcfg.carrots.length);
+    out.push('carrots=' + counts.join('+') + '=' + counts.reduce((a, b) => a + b, 0));
+  }
+  if (test === 'fence') out.push(JSON.stringify(wallClimb(W.tvStudio, 20, -4, 23, 8)));
+  if (test === 'barn') out.push(JSON.stringify(wallClimb(W.dacha, 28, 8, 31, 8)));
+  if (test === 'masks') out.push(JSON.stringify(wallClimb(W.island, -25.8, 2, -23.4, 8)));
+  if (test === 'trunks') out.push(JSON.stringify(wallClimb(W.fairytale, -2.5, 26, 0.5, 7)));
+  if (test === 'rock') out.push(JSON.stringify(grapple(W.tvStudio, [0, 1.6, -18.5], 2, (p) => p.z < -32 && p.z > -42 && Math.abs(p.y - 1.6) < 0.2)));
+  if (test === 'pond') out.push(JSON.stringify(grapple(W.dacha, [0, 0, -2.2], 2, (p) => p.z < -21 && p.z > -39)));
+  if (test === 'cannon') {
+    const lv = W.museum(ctx); const cp = lv.platforms.find((p) => p.launch); if (q.get('vz')) cp.launch[2] = +q.get('vz'); lv.pos.set(-28, 4, -14); lv.chars.hare.pos.copy(lv.pos); let landed = false;
+    step(lv, 60 * 4, () => { if (lv.grounded && lv.pos.y > 6 && lv.pos.z < -26) landed = true; });
+    out.push(JSON.stringify({ landed, pos: lv.pos.toArray().map((v) => +v.toFixed(1)) }));
+  }
+  if (test === 'carpet') {
+    const lv = W.fairytale(ctx); lv.setFlag('apples'); step(lv, 5);
+    const c = lv.platforms.filter((p) => p.def && p.def.appear); out.push('carpets solid=' + c.map((p) => p.solid).join(','));
+  }
+  if (test === 'flags') {
+    // simulate the whole objective chain in the TV world: set flags then collect the gear
+    const lv = W.tvStudio(ctx); ['cook', 'fence', 'rock', 'chase'].forEach((f) => lv.setFlag(f)); const g = lv.things.find((t) => t.type === 'gear');
+    lv.pos.set(g.v.x, g.v.y, g.v.z); step(lv, 5); out.push('gear won=' + won);
+  }
+  if (test === 'smash') {
+    const lv = W.island(ctx); lv.unlocked.wolf = true; lv.switchChar(); lv.pos.set(0, 0, -17.5); lv.chars.wolf.pos.copy(lv.pos);
+    step(lv, 3, (i) => { if (i === 1) press('KeyE'); }); out.push('crates broken=' + lv.platforms.filter((p) => p.def && p.def.breakable && p.broken).length);
+  }
+  if (test === 'guard') {
+    const lv = W.tvStudio(ctx); const g = lv.guards[0]; lv.pos.set(g.mesh.position.x, 0.1, g.mesh.position.z + 4); lv.chars.hare.pos.copy(lv.pos); lv.invuln = 0;
+    step(lv, 90); out.push('oops=' + lv.oops);
+  }
+} catch (e) { out.push('ERR ' + e.stack.split('\n').slice(0, 3).join(' | ')); }
+document.getElementById('out').textContent = 'RESULT ' + test + ' ' + out.join(' ');
+</script>
