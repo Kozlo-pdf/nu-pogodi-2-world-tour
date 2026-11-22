@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>pad</title>
+<script type="importmap">{ "imports": { "three": "../vendor/three.module.js" } }</script>
+<pre id="out">running</pre>
+<script type="module">
+import { isDown, wasHit, endFrame, pollGamepad, setPadProfile, input } from '../js/common.js';
+setPadProfile({ square: 'KeyE', camRight: 'KeyZ' });
+const mk = () => ({ connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 18 }, () => ({ pressed: false, value: 0 })) });
+const pads = [mk(), mk()]; navigator.getGamepads = () => pads;
+const out = [];
+const frame = (f) => { f(); pollGamepad(); };
+const press = (p, i, v = true) => { p.buttons[i] = { pressed: v, value: v ? 1 : 0 }; };
+// 1: left stick right -> D / ArrowRight held
+pads[0].axes[0] = 0.9; frame(() => {}); out.push('stickR:' + [isDown('KeyD'), isDown('ArrowRight'), wasHit('KeyD')].join(',')); endFrame();
+frame(() => {}); out.push('stickR2:' + [isDown('KeyD'), wasHit('KeyD')].join(',')); endFrame(); pads[0].axes[0] = 0;
+// 2: cross
+press(pads[0], 0); frame(() => {}); out.push('cross:' + [wasHit('Space'), wasHit('Enter'), wasHit('PadA')].join(',')); endFrame(); press(pads[0], 0, false); pollGamepad(); endFrame();
+// 3: square, triangle, circle, R1, L1, options
+for (const [i, k] of [[2, 'KeyE'], [3, 'Tab'], [1, 'KeyF'], [5, 'KeyC'], [4, 'ShiftLeft'], [9, 'Escape'], [8, 'KeyR'], [7, 'KeyZ'], [6, 'KeyQ']]) { press(pads[0], i); pollGamepad(); out.push(k + ':' + wasHit(k)); endFrame(); press(pads[0], i, false); pollGamepad(); endFrame(); }
+// 4: split pads (versus): pad0 -> WASD only, pad1 -> arrows only
+input.splitPads = true; pads[0].axes[0] = 0.9; pads[1].axes[0] = -0.9; pollGamepad();
+out.push('split:' + [isDown('KeyD'), isDown('ArrowRight'), isDown('KeyA'), isDown('ArrowLeft')].join(','));
+document.getElementById('out').textContent = 'RESULT ' + out.join(' | ');
+</script>

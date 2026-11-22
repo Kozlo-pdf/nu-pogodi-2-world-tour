@@ -19,6 +19,9 @@ all six worlds, but each world is a compact hub. A first playthrough takes rough
 
 Not included from the pitch: Slapstick Chess, a full set of 2D pixel episodes (there is one retro game), and the full 15-hour content volume.
 
+## Controller (PS4 / Xbox)
+Plug in or pair a pad and press any button. Stick/D-pad = move, **✕** jump, **□** interact, **△** swap Hare/Wolf, **○** grapple, **R1** disguise, **L1** sneak, **R-stick / L2 / R2** camera, **Options** pause, **Share** restart, **L3** mute. Menus: D-pad + ✕. Rumble on hits. Two pads = two players in Versus.
+
 ## Run locally
 On Windows double-click `PLAY.bat`. Otherwise (ES modules need HTTP):
 ```sh

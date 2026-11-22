@@ -1,5 +1,5 @@
 import {
-  THREE, isDown, wasHit, box, cyl, sph, cone, mat, mesh, makeHare, makeWolf, animateLimbs, mulberry32, lerpAngle, damp, clamp,
+  THREE, input, isDown, wasHit, box, cyl, sph, cone, mat, mesh, makeHare, makeWolf, animateLimbs, mulberry32, lerpAngle, damp, clamp,
 } from './common.js';
 import { makeLabel, makeCarrot } from './hub.js';
 import { sfx } from './audio.js';
@@ -167,6 +167,7 @@ export class Versus {
     this.rng = mulberry32(3); for (let i = 0; i < 6; i++) this.addCarrot();
     this.cams = [new THREE.PerspectiveCamera(60, 1, 0.1, 200), new THREE.PerspectiveCamera(60, 1, 0.1, 200)];
     this.div = document.createElement('div'); this.div.style.cssText = 'position:fixed;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:#000;z-index:3;pointer-events:none'; document.body.append(this.div);
+    input.splitPads = true;
     ui.toast('VERSUS: Player 1 = Hare (WASD) grabs 6 carrots. Player 2 = Wolf (arrow keys) tags the Hare 3 times. 90 seconds!', 6000);
   }
   addCarrot() { const m = makeCarrot(); m.scale.setScalar(1.4); for (let k = 0; k < 20; k++) { const x = (this.rng() - 0.5) * 38, z = (this.rng() - 0.5) * 38; if (!this.hit(x, z, 1)) { m.position.set(x, 0, z); break; } } this.scene.add(m); this.carrots.push(m); }
@@ -204,5 +205,5 @@ export class Versus {
     });
     r.setScissorTest(false); r.setViewport(0, 0, W, H);
   }
-  dispose() { this.div.remove(); }
+  dispose() { this.div.remove(); input.splitPads = false; }
 }
