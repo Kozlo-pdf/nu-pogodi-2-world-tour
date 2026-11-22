@@ -103,6 +103,7 @@ export class Hub extends Platformer {
     for (const d of cfg.things ?? []) this.addThing(d);
     (cfg.carrots ?? []).forEach((p, i) => this.addCarrot(p, i));
     if (cfg.build2) cfg.build2(this.scene, this);
+    this.labels = []; this.scene.traverse((o) => { if (o.isSprite) this.labels.push(o); });
 
     this.hookLine = cyl(0.04, 0.04, 1, 0x8a5a2a, 4); this.hookLine.visible = false; this.scene.add(this.hookLine);
     this.refreshObjectives();
@@ -301,6 +302,8 @@ export class Hub extends Platformer {
       if (d.appear) { const on = this.need(d.appear); pl.solid = on; pl.mesh.visible = on; }
     }
 
+    const wp = new THREE.Vector3();
+    for (const l of this.labels) { l.getWorldPosition(wp); const d = wp.distanceTo(this.pos); l.material.opacity = clamp((24 - d) / 9, 0, 1) * clamp((wp.distanceTo(this.ctx.camera.position) - 4) / 5, 0, 1); l.visible = l.material.opacity > 0.02; }
     this.updateThings(dt);
     this.updateGuards(dt);
     this.updateCarrots(dt);
@@ -337,7 +340,7 @@ export class Hub extends Platformer {
       else if (t.type === 'item' && !t.got) {
         t.mesh.rotation.y += dt * 2; t.mesh.position.y = t.v.y + Math.sin(this.t2 * 3) * 0.1;
         if (dist2(this.pos, t.v) < 1.3 && Math.abs(this.pos.y - t.v.y) < 2.4) {
-          t.got = true; this.scene.remove(t.mesh); this.counts[t.key] = (this.counts[t.key] ?? 0) + 1; sfx.coin();
+          t.got = true; this.puff(t.v, 0xff6a6a, 10); this.scene.remove(t.mesh); this.counts[t.key] = (this.counts[t.key] ?? 0) + 1; sfx.coin();
           ui.toast(`${t.name ?? 'Item'} ${this.counts[t.key]}/${t.of}`, 1800);
           if (this.counts[t.key] >= t.of) { this.setFlag(t.flag); ui.toast(t.doneMsg ?? 'All collected!', 3500); }
         }
@@ -374,7 +377,7 @@ export class Hub extends Platformer {
     for (let i = this.carrots.length - 1; i >= 0; i--) {
       const k = this.carrots[i]; k.m.rotation.y += dt * 2.2; k.m.position.y = k.base + Math.sin(this.t2 * 3 + i) * 0.12;
       const cp = this.pos; if (Math.abs(cp.x - k.p.x) < 1.1 && Math.abs(cp.z - k.p.z) < 1.1 && cp.y < k.p.y + 1.6 && cp.y + this.P.H > k.p.y - 0.2) {
-        this.scene.remove(k.m); this.carrots.splice(i, 1); this.ctx.save.addCarrot(k.id); sfx.coin();
+        this.puff(k.p, 0xffd23f, 12); this.scene.remove(k.m); this.carrots.splice(i, 1); this.ctx.save.addCarrot(k.id); sfx.coin();
         ui.toast(`🥕 Golden Carrot! ${this.carrotsHere()}/${this.hcfg.carrots.length}  (total ${this.ctx.save.carrotTotal()}/100)`, 1600);
       }
     }

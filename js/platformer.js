@@ -15,7 +15,7 @@ const GRAV = 30;
 export class Platformer {
   constructor(ctx, cfg) {
     this.ctx = ctx; this.cfg = cfg;
-    this.P = { ...DEFAULT_P }; this.rotKeys = ['KeyQ', 'KeyE']; this.noInput = false; this.wallT = 0; this.wallAx = 'x'; this.wallDir = 0; this.boostT = 0; this.noCutT = 0;
+    this.P = { ...DEFAULT_P }; this.rotKeys = ['KeyQ', 'KeyE']; this.noInput = false; this.wallT = 0; this.wallAx = 'x'; this.wallDir = 0; this.boostT = 0; this.noCutT = 0; this.fx = [];
     const scene = this.scene = new THREE.Scene();
     scene.background = new THREE.Color(cfg.sky);
     scene.fog = new THREE.Fog(cfg.fog ?? cfg.sky, 45, 140);
@@ -187,8 +187,23 @@ export class Platformer {
     }
 
     this.animate(dt);
+    this.updateFx(dt);
     this.placeCamera(false, dt);
     followSun(this.sun, this.pos);
+  }
+
+  puff(p, color = 0xe8e0d0, n = 6) {
+    for (let i = 0; i < n; i++) {
+      const m = sph(0.13, color, 5); m.castShadow = false;
+      m.position.set(p.x + (Math.random() - 0.5) * 0.6, p.y + 0.1, p.z + (Math.random() - 0.5) * 0.6); this.scene.add(m);
+      this.fx.push({ m, v: new THREE.Vector3((Math.random() - 0.5) * 3.2, 1 + Math.random() * 2.2, (Math.random() - 0.5) * 3.2), life: 0.55 });
+    }
+  }
+  updateFx(dt) {
+    for (let i = this.fx.length - 1; i >= 0; i--) {
+      const f = this.fx[i]; f.life -= dt; f.m.position.addScaledVector(f.v, dt); f.v.y -= 6 * dt; f.m.scale.multiplyScalar(Math.max(0, 1 - dt * 2.6));
+      if (f.life <= 0) { this.scene.remove(f.m); f.m.geometry.dispose(); this.fx.splice(i, 1); }
+    }
   }
 
   stepCrumble(pl, dt) {
@@ -230,11 +245,11 @@ export class Platformer {
     this.coyote = Math.max(0, this.coyote - dt);
     if (this.jumpBuf > 0) {
       if (this.grounded || this.coyote > 0) {
-        this.vel.y = this.P.jump; this.jumps = 1; this.coyote = 0; this.jumpBuf = 0; this.grounded = false; this.ground = null; sfx.jump();
+        this.puff(this.pos, 0xe8e0d0, 5); this.vel.y = this.P.jump; this.jumps = 1; this.coyote = 0; this.jumpBuf = 0; this.grounded = false; this.ground = null; sfx.jump();
       } else if (this.P.wall && this.wallT > 0) {
         this.vel.y = this.P.jump * 0.98; this.vel[this.wallAx] = this.wallDir * 8.5; this.jumps = 1; this.jumpBuf = 0; this.wallT = 0; sfx.air();
       } else if (this.jumps < this.P.maxJumps) {
-        this.vel.y = this.P.jump * 0.92; this.jumps = 2; this.jumpBuf = 0; sfx.air();
+        this.puff(this.pos, 0xffffff, 6); this.vel.y = this.P.jump * 0.92; this.jumps = 2; this.jumpBuf = 0; sfx.air();
       }
     }
     if (!NI && this.noCutT <= 0 && !isDown('Space') && this.vel.y > 5) this.vel.y -= 38 * dt; // variable jump height
@@ -242,7 +257,7 @@ export class Platformer {
     this.vel.y = Math.max(-32, this.vel.y - GRAV * dt);
 
     // --- Y ---
-    const prevY = this.pos.y;
+    const prevY = this.pos.y, vyBefore = this.vel.y;
     this.pos.y += this.vel.y * dt;
     const wasGround = this.grounded;
     this.grounded = false; this.ground = null;
@@ -259,6 +274,7 @@ export class Platformer {
         this.pos.y = pl.miny - this.P.H; this.vel.y = 0;
       }
     }
+    if (this.grounded && !wasGround && vyBefore < -8 && !this.noInput) this.puff(this.pos, 0xe8e0d0, 7);
     if (this.grounded) {
       this.coyote = 0.11; this.jumps = 0;
       const pl = this.ground;
