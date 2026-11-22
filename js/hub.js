@@ -3,6 +3,8 @@ import {
 } from './common.js';
 import { Platformer, DEFAULT_P } from './platformer.js';
 import { sfx } from './audio.js';
+import { makeHippo, makeWitch, makeCarrot, makeGear } from './props.js';
+export { makeHippo, makeWitch, makeCarrot, makeGear };
 import { ui } from './ui.js';
 
 export const CHARS = {
@@ -22,52 +24,6 @@ export function makeLabel(text, color = '#fff2c4', w = 5) {
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
   sp.scale.set(w, w / 4, 1);
   return sp;
-}
-
-export function makeHippo() {
-  const g = new THREE.Group();
-  const body = mesh(new THREE.CapsuleGeometry(0.7, 0.8, 4, 10), 0x4a5f8f); body.position.y = 1.2; g.add(body);
-  const head = sph(0.62, 0x9a8fa3, 12); head.position.set(0, 2.15, 0.1); head.scale.set(1.1, 0.9, 1.1); g.add(head);
-  const snout = sph(0.42, 0xb9a9b9, 10); snout.position.set(0, 1.95, 0.6); snout.scale.set(1.3, 0.8, 1); g.add(snout);
-  for (const s of [-1, 1]) {
-    const eye = sph(0.09, 0x111111, 6); eye.position.set(s * 0.28, 2.4, 0.45); g.add(eye);
-    const ear = sph(0.14, 0x9a8fa3, 6); ear.position.set(s * 0.5, 2.7, -0.05); g.add(ear);
-    const leg = mesh(new THREE.CapsuleGeometry(0.2, 0.4, 4, 6), 0x2f3f66); leg.position.set(s * 0.35, 0.4, 0); g.add(leg);
-    const nos = sph(0.05, 0x5a4a5a, 5); nos.position.set(s * 0.15, 2.05, 0.95); g.add(nos);
-  }
-  const cap = cyl(0.5, 0.6, 0.3, 0x1f2a4a, 12); cap.position.y = 2.75; g.add(cap);
-  const peak = box(0.7, 0.06, 0.4, 0x111111); peak.position.set(0, 2.62, 0.55); g.add(peak);
-  const badge = sph(0.08, mat(0xffd23f, 0x886600), 6); badge.position.set(0, 2.78, 0.5); g.add(badge);
-  return g;
-}
-
-export function makeCarrot() {
-  const g = new THREE.Group();
-  const c = cone(0.2, 0.7, mat(0xffb020, 0x885500), 8); c.rotation.x = Math.PI; c.position.y = 0.35; g.add(c);
-  for (let i = 0; i < 3; i++) { const l = cone(0.07, 0.35, 0x37c25a, 4); l.position.set((i - 1) * 0.08, 0.85, 0); l.rotation.z = (i - 1) * 0.4; g.add(l); }
-  g.traverse((m) => { if (m.isMesh) m.castShadow = false; });
-  return g;
-}
-
-export function makeGear() {
-  const g = new THREE.Group();
-  const m = mat(0xffc933, 0x8a5a00);
-  const ring = mesh(new THREE.TorusGeometry(0.7, 0.2, 8, 20), m); g.add(ring);
-  for (let i = 0; i < 10; i++) { const t = box(0.26, 0.26, 0.34, m); const a = i / 10 * Math.PI * 2; t.position.set(Math.cos(a) * 1.0, Math.sin(a) * 1.0, 0); t.rotation.z = a; g.add(t); }
-  const hub = cyl(0.25, 0.25, 0.4, m, 10); hub.rotation.x = Math.PI / 2; g.add(hub);
-  g.scale.setScalar(1.1);
-  return g;
-}
-
-export function makeWitch() {
-  const g = new THREE.Group();
-  const cloak = cone(0.9, 2.4, 0x3a2a4a, 10); cloak.position.y = 1.2; g.add(cloak);
-  const head = sph(0.4, 0x9ac28a, 10); head.position.y = 2.6; g.add(head);
-  const nose = cone(0.1, 0.4, 0x7aa26a, 6); nose.rotation.x = Math.PI / 2; nose.position.set(0, 2.55, 0.5); g.add(nose);
-  const brim = cyl(0.8, 0.8, 0.06, 0x1a1020, 14); brim.position.y = 2.9; g.add(brim);
-  const hat = cone(0.45, 1.1, 0x1a1020, 10); hat.position.y = 3.5; g.add(hat);
-  const broom = cyl(0.04, 0.04, 2.2, 0x8a5a2a, 6); broom.rotation.z = Math.PI / 2.4; broom.position.set(0.6, 1.2, 0.3); g.add(broom);
-  return g;
 }
 
 const TAU = Math.PI * 2;

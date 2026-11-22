@@ -2,6 +2,7 @@ import {
   THREE, wasHit, box, cyl, sph, cone, mat, mesh, makeHare, makeWolf, makeRobotHare, animateLimbs, lerp,
 } from './common.js';
 import { makeGear } from './hub.js';
+import { makeHarvester, makePalm } from './props.js';
 import { sfx } from './audio.js';
 import { ui } from './ui.js';
 
@@ -145,8 +146,7 @@ function islandSet(scene, api) {
   floor(scene, 0xf0dca0, 140);
   for (let i = 0; i < 14; i++) {
     const a = i / 14 * Math.PI * 2, r = 16 + (i % 3) * 3;
-    const t = cyl(0.3, 0.45, 8, 0x8a5a2a, 6); t.position.set(Math.cos(a) * r, 4, Math.sin(a) * r - 4); t.rotation.z = 0.12; scene.add(t);
-    for (let k = 0; k < 5; k++) { const l = box(5, 0.2, 0.9, 0x2f9e4a); l.position.set(Math.cos(a) * r, 8, Math.sin(a) * r - 4); l.rotation.y = k * 1.26; scene.add(l); }
+    const t = makePalm(); t.position.set(Math.cos(a) * r, 0, Math.sin(a) * r - 4); t.rotation.y = i * 1.3; t.scale.setScalar(0.9 + (i % 3) * 0.12); scene.add(t);
   }
   const pot = cyl(2.2, 1.8, 2.2, 0x2a2a2a, 20); pot.position.set(0, 1.1, 0); scene.add(pot);
   const water = cyl(2.0, 2.0, 0.1, mat(0x8ed0ff, 0x224466), 20); water.position.set(0, 2.15, 0); scene.add(water);
@@ -224,9 +224,7 @@ export const CUTSCENES = {
       const rift = mesh(new THREE.TorusGeometry(14, 1.2, 8, 40), mat(0x331122, 0xaa1133)); rift.position.set(0, 30, -34); scene.add(rift); api.rift = rift;
       for (let i = 0; i < 40; i++) { const e = sph(0.35, mat(0xff2a2a, 0xff0000), 6); const a = Math.random() * Math.PI * 2, r = Math.random() * 12; e.position.set(Math.cos(a) * r, 30 + Math.sin(a) * r, -34); scene.add(e); }
       const barn = box(7, 4, 6, 0x8a3b2b); barn.position.set(14, 2, -6); scene.add(barn);
-      const harv = new THREE.Group(); harv.add(box(3.4, 2, 5, 0xd9363e)); const reel = cyl(1.2, 1.2, 3.4, 0xf0b400, 12); reel.rotation.z = Math.PI / 2; reel.position.set(0, 1.2, 3); harv.add(reel);
-      for (const s of [-1, 1]) { const w = cyl(0.9, 0.9, 0.5, 0x222222, 12); w.rotation.z = Math.PI / 2; w.position.set(s * 1.9, 0.9, -1.2); harv.add(w); }
-      harv.position.set(14, 1, -1); harv.visible = false; scene.add(harv); api.harv = harv;
+      const harv = makeHarvester(); harv.position.set(14, 0, -1); harv.visible = false; scene.add(harv); api.harv = harv; const reel = harv.userData.reel;
       api.update.push((t, dt) => { rift.rotation.z = t * 0.2; reel.rotation.x = t * 5; if (harv.userData.go) { harv.position.z -= 6 * dt; harv.position.x -= 2.2 * dt; harv.rotation.y = 0.3; } });
     },
     actors: {

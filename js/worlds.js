@@ -1,5 +1,6 @@
 import { THREE, box, cyl, sph, cone, mat, mesh, makeHare, makeWolf } from './common.js';
 import { Hub, makeLabel, makeHippo } from './hub.js';
+import { makePalm, makePine, makeMushroom, makeLion, makeHarvester, makeBoar, makeBuilding } from './props.js';
 import { Runner } from './runner.js';
 import { Duel } from './duel.js';
 import { RopeBoss, WeightLift } from './minis.js';
@@ -172,8 +173,8 @@ export function fairytale(ctx) {
     carrots: [[-34, 0.5, 34], [34, 0.5, 34], [-34, 0.5, 6], [34, 0.5, 6], [12, 2.3, 12], [17, 4, 9], [-20, 3, 14], [-30, 0.5, -30], [-22, 0.5, -20],
       [22, 0.5, -20], [34, 0.5, -32], [26, 0.5, -34], [0, 0.5, 20], [-12, 0.5, 30], [12, 0.5, 30], [-26, 0.5, -6], [26, 0.5, 4]],
     build(scene) {
-      for (let i = 0; i < 16; i++) { const a = i * 2.3; const st = cyl(0.4, 0.5, 2.5, 0xe8dcc0, 8); st.position.set(Math.cos(a) * (14 + i * 1.7) % 38, 1.25, 14 + Math.sin(a) * 12); scene.add(st); const cap = sph(1.6, mat([0xd9363e, 0x9a4adb, 0xffa020][i % 3]), 10); cap.scale.y = 0.6; cap.position.set(st.position.x, 2.8, st.position.z); scene.add(cap); }
-      for (let i = 0; i < 18; i++) { const t = new THREE.Group(); const tr = cyl(0.5, 0.8, 7, 0x3a2a22, 6); tr.position.y = 3.5; const c = cone(2.6, 6, 0x1f5a34, 7); c.position.y = 9; t.add(tr, c); t.position.set(-40 + i * 4.6, 0, 40); scene.add(t); }
+      for (let i = 0; i < 16; i++) { const a = i * 2.3; const m = makeMushroom([0xd9363e, 0x9a4adb, 0xffa020][i % 3]); m.scale.setScalar(0.6 + (i % 3) * 0.12); m.position.set(Math.cos(a) * (14 + i * 1.7) % 38, 0, 14 + Math.sin(a) * 12); scene.add(m); }
+      for (let i = 0; i < 18; i++) { const t = makePine(2.4 + (i % 3) * 0.4); t.position.set(-40 + i * 4.6, 0, 40); scene.add(t); }
       const hut = new THREE.Group(); const hb = box(5, 3.5, 5, 0x6b4a2a); hb.position.y = 5.5; const hr = cone(4.2, 2.6, 0x4a2a1a, 4); hr.rotation.y = Math.PI / 4; hr.position.y = 8.5; hut.add(hb, hr);
       for (const s of [-1, 1]) { const leg = cyl(0.25, 0.25, 4.6, 0xd9a24a, 6); leg.position.set(s * 1.4, 2.3, 0); hut.add(leg); const foot = box(1.4, 0.3, 1.8, 0xd9a24a); foot.position.set(s * 1.4, 0.15, 0.4); hut.add(foot); }
       hut.position.set(-8, 0, 10); scene.add(hut);
@@ -206,9 +207,7 @@ export function boarRide() {
     customRider: {
       boar: () => {
         const group = new THREE.Group(); const inner = makeHare({ fur: 0x9fa8b5 }); inner.rotation.y = Math.PI; inner.position.y = 0.85; inner.scale.setScalar(0.8); group.add(inner);
-        const body = mesh(new THREE.CapsuleGeometry(0.55, 1.0, 4, 10), 0x6b4a32); body.rotation.x = Math.PI / 2; body.position.y = 0.7; group.add(body);
-        const head = sph(0.45, 0x5a3a28, 10); head.position.set(0, 0.8, -1.2); group.add(head);
-        for (const s of [-1, 1]) { const tusk = cone(0.07, 0.4, 0xf0e6c8, 5); tusk.rotation.x = -Math.PI / 2; tusk.position.set(s * 0.25, 0.65, -1.6); group.add(tusk); for (const z of [-0.5, 0.5]) { const lg = cyl(0.1, 0.1, 0.5, 0x3a2a1a, 5); lg.position.set(s * 0.3, 0.25, z); group.add(lg); } }
+        const boar = makeBoar(); boar.rotation.y = 0; group.add(boar);
         return { group, inner, wheels: [], kind: 'boar' };
       },
     },
@@ -254,7 +253,7 @@ export function island(ctx) {
       [-30, 0.5, -34], [30, 0.5, -34], [20, 0.5, 24], [-20, 0.5, 24], [0, 0.5, 10], [-16, 0.5, -10]],
     build(scene) {
       const water = box(400, 1, 400, mat(0x2a9fd8, 0x0a3a55, { transparent: true, opacity: 0.85 })); water.position.set(0, -3, 0); water.castShadow = false; scene.add(water);
-      for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2, r = 46; const t = cyl(0.3, 0.45, 8, 0x8a5a2a, 6); t.position.set(Math.cos(a) * r, 4, Math.sin(a) * r); t.rotation.z = 0.12; scene.add(t); for (let k = 0; k < 5; k++) { const l = box(5, 0.2, 0.9, 0x2f9e4a); l.position.set(Math.cos(a) * r, 8, Math.sin(a) * r); l.rotation.y = k * 1.26; scene.add(l); } }
+      for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2, r = 46; const t = makePalm(); t.position.set(Math.cos(a) * r, 0, Math.sin(a) * r); t.rotation.y = i * 1.7; t.scale.setScalar(1.1); scene.add(t); }
       const pot = cyl(2.4, 2.0, 2.2, 0x2a2a2a, 20); pot.position.set(0, 1.1, 0); scene.add(pot); const wt = cyl(2.2, 2.2, 0.1, mat(0x8ed0ff, 0x224466), 20); wt.position.set(0, 2.15, 0); scene.add(wt);
       const fire = cone(2, 1.4, mat(0xff7a1a, 0xaa3300), 8); fire.position.set(0, 0.5, 0); scene.add(fire);
       const vol = cone(18, 22, 0x4a3a32, 12); vol.position.set(0, 11, -60); scene.add(vol); const lava = cone(5, 4, mat(0xff4a1a, 0xff3300), 12); lava.position.set(0, 21, -60); scene.add(lava);
@@ -304,7 +303,7 @@ export function museum(ctx) {
       const big = cone(26, 16, 0xd9363e, 12); big.position.set(-28, 22, -30); scene.add(big);
       for (let i = 0; i < 10; i++) { const pl = cyl(0.4, 0.4, 14, i % 2 ? 0xf5f1e6 : 0xd9363e, 6); pl.position.set(-28 + Math.cos(i * 0.63) * 24, 7, -30 + Math.sin(i * 0.63) * 24); scene.add(pl); }
       const bar = cyl(0.5, 0.5, 4, 0x333333, 10); bar.rotation.x = -1.0; bar.position.set(-28, 2.4, -15.5); scene.add(bar);
-      for (let i = 0; i < 3; i++) { const l = new THREE.Group(); const b = box(2.4, 1.1, 1, 0xd9a24a); b.position.y = 0.7; const m = sph(0.8, 0x8a5a2a, 8); m.position.set(1.4, 1.1, 0); l.add(b, m); l.position.set(18 + i * 8, 0, -9); scene.add(l); }
+      for (let i = 0; i < 3; i++) { const l = makeLion(); l.position.set(18 + i * 8, 0, -8.2); l.rotation.y = Math.PI * (i % 2); scene.add(l); }
       zone(scene, 'EGYPTIAN HALL', -27, 7, 0, 7); zone(scene, 'LION TIGHTROPE', 24, 10, -12, 7); zone(scene, 'CIRCUS CANNON', -28, 5, -14, 7); zone(scene, 'BIG TOP', -28, 11, -31, 5);
     },
   });
@@ -353,13 +352,13 @@ export function dacha(ctx) {
       [20, 0.5, 26], [-20, 0.5, 26], [10, 0.5, 20], [-10, 0.5, 8], [30, 0.5, -2], [-30, 0.5, -10]],
     build(scene) {
       const pond = cyl(14, 14, 0.4, mat(0x4aa0e0, 0x0a3a55, { transparent: true, opacity: 0.8 }), 28); pond.position.set(0, -2.6, -12); pond.castShadow = false; scene.add(pond);
-      const house = box(10, 6, 8, 0xc98f6b); house.position.set(-22, 3, 28); scene.add(house); const roof = cone(8, 3.5, 0x8a3b2b, 4); roof.rotation.y = Math.PI / 4; roof.position.set(-22, 7.7, 28); scene.add(roof);
+      const house = makeBuilding(10, 6, 8, 0xc98f6b); house.position.set(-22, 0, 28); scene.add(house); const roof = cone(8, 3.5, 0x8a3b2b, 4); roof.rotation.y = Math.PI / 4; roof.position.set(-22, 7.7, 28); scene.add(roof);
       for (let i = -8; i <= 8; i++) { const p = box(0.3, 1.8, 0.2, 0xe8dcc0); p.position.set(i * 4.5, 0.9, 36); scene.add(p); }
       for (let i = 0; i < 10; i++) { const f = sph(0.4, [0xff5f8a, 0xffd23f, 0xffffff][i % 3], 6); f.position.set(-28 + i * 6, 0.3, 21); scene.add(f); }
       const well = cyl(1.4, 1.4, 1.6, 0x8c8c94, 14); well.position.set(24, 0.8, 24); scene.add(well);
       for (let i = 0; i < 4; i++) { const hv = box(1.1, 1.4, 1.1, 0xe8b830); hv.position.set(-27 + (i % 2) * 2, 0.7, -2 + Math.floor(i / 2) * 2); scene.add(hv); }
       const rift = mesh(new THREE.TorusGeometry(16, 1.2, 8, 40), mat(0x331122, 0xaa1133)); rift.position.set(0, 36, -50); scene.add(rift);
-      const harv = new THREE.Group(); harv.add(box(3.4, 2, 5, 0xd9363e)); const reel = cyl(1.2, 1.2, 3.4, 0xf0b400, 12); reel.rotation.z = Math.PI / 2; reel.position.set(0, 1.2, 3); harv.add(reel); harv.position.set(14, 1, 30); scene.add(harv);
+      const harv = makeHarvester(); harv.position.set(14, 0, 30); harv.rotation.y = 0.5; scene.add(harv);
       zone(scene, 'SHED', -26, 7, 0, 4); zone(scene, 'BARN', 28, 11, 8, 4); zone(scene, 'POND', 0, 9, -12, 4); zone(scene, 'ROBOT INVASION!', 0, 12, 6, 8);
     },
   });

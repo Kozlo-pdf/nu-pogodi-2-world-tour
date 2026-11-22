@@ -3,6 +3,7 @@ import {
 } from './common.js';
 import { makeLabel, makeCarrot } from './hub.js';
 import { sfx } from './audio.js';
+import { makeBear } from './props.js';
 import { ui } from './ui.js';
 
 function baseScene(bg, hemi = 1.1) {
@@ -42,21 +43,7 @@ export class RopeBoss {
     this.hud();
     ui.toast('The Hare pulls the ropes! Hit A / S / D (or arrows) as each note reaches the ring so the Wolf lands punches.', 6000);
   }
-  makeBear() {
-    const g = new THREE.Group(); const fur = 0x7a5230;
-    const body = sph(1.5, fur, 12); body.scale.set(1, 1.2, 0.9); body.position.y = 2.2; g.add(body);
-    const head = sph(0.85, fur, 12); head.position.y = 4.3; g.add(head);
-    const snout = sph(0.42, 0xc9a070, 8); snout.position.set(0, 4.1, 0.75); g.add(snout);
-    for (const s of [-1, 1]) {
-      const ear = sph(0.28, fur, 6); ear.position.set(s * 0.65, 5.0, 0); g.add(ear);
-      const eye = sph(0.1, 0x111111, 6); eye.position.set(s * 0.32, 4.5, 0.7); g.add(eye);
-      const arm = new THREE.Group(); arm.position.set(s * 1.5, 3.1, 0); const a = mesh(new THREE.CapsuleGeometry(0.4, 0.9, 4, 8), fur); a.position.y = -0.6; arm.add(a);
-      const glove = sph(0.55, 0xd9363e, 8); glove.position.y = -1.4; arm.add(glove); g.add(arm); g['arm' + (s < 0 ? 'L' : 'R')] = arm;
-      const leg = mesh(new THREE.CapsuleGeometry(0.4, 0.6, 4, 8), fur); leg.position.set(s * 0.6, 0.6, 0); g.add(leg);
-    }
-    const shorts = cyl(1.2, 1.35, 0.9, 0x2a58b8, 10); shorts.position.y = 1.4; g.add(shorts);
-    return g;
-  }
+  makeBear() { return makeBear(); }
   hud() { ui.info(`🐺 ${'❤️'.repeat(this.wolfHp)}${'🖤'.repeat(5 - this.wolfHp)}`); ui.bar('a', 'Bear', this.bearHp / this.bearMax); }
   update(dt) {
     dt = Math.min(dt, 0.05); if (this.over) return; this.clock += dt;

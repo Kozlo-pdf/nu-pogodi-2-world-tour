@@ -1,0 +1,28 @@
+<!doctype html><meta charset="utf-8"><title>showcase</title>
+<style>body{margin:0;background:#222}canvas{display:block}</style>
+<script type="importmap">{ "imports": { "three": "../vendor/three.module.js" } }</script>
+<script type="module">
+import { THREE, makeHare, makeWolf, makeRobotHare } from '../js/common.js';
+import * as P from '../js/props.js';
+const g = new URLSearchParams(location.search).get('g') || 'A';
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(1200, 520); r.shadowMap.enabled = true; document.body.append(r.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x8fa6c8);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x778899, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 1.0); sun.position.set(6, 14, 12); sun.castShadow = true;
+sun.shadow.camera.left = -30; sun.shadow.camera.right = 30; sun.shadow.camera.top = 20; sun.shadow.camera.bottom = -20; sun.shadow.mapSize.set(2048, 2048); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.BoxGeometry(200, 1, 100), new THREE.MeshStandardMaterial({ color: 0x6b7a5a })); floor.position.y = -0.5; floor.receiveShadow = true; scene.add(floor);
+const duo = () => { const q = new THREE.Group(); const a = P.makeCarrot(); a.scale.setScalar(2.2); a.position.x = -1.2; const b = P.makeGear(); b.position.set(1.4, 1.2, 0); q.add(a, b); return q; };
+const G = {
+  A: { sp: 3.4, dist: 11, h: 1.6, rot: 0.25, f: [() => makeHare(), () => makeWolf(), () => makeWolf({ dress: true }), () => makeRobotHare()] },
+  B: { sp: 5.2, dist: 17, h: 2.4, rot: 0.3, f: [() => P.makeHippo(), () => P.makeWitch(), () => P.makeBear(), () => P.makeBoar()] },
+  C: { sp: 4.6, dist: 15, h: 1.5, rot: 0.5, f: [() => P.makeLion(), () => P.makeKnight(), () => P.makeCannon(), duo] },
+  D: { sp: 5.5, dist: 17, h: 1.2, rot: 0.6, f: [() => P.makeBike(), () => P.makeMotorcycle(), () => P.makeCar(), () => P.makeSteamroller()] },
+  E: { sp: 8.5, dist: 20, h: 1.8, rot: 0.6, f: [() => P.makeTrain(), () => P.makeHarvester()] },
+  F: { sp: 6, dist: 20, h: 4, rot: 0.3, f: [() => P.makePine(1.2, false), () => P.makePine(1.2, true), () => P.makePalm(), () => P.makeMushroom(), () => P.makeLampPost(6)] },
+  H: { sp: 14, dist: 30, h: 7, rot: 0.4, f: [() => P.makeBuilding(8, 14, 8, 0xc9b79c), () => P.makeBuilding(10, 8, 7, 0xb0b8c2)] },
+}[g];
+G.f.forEach((f, i) => { const m = f(); m.position.set((i - (G.f.length - 1) / 2) * G.sp, 0, 0); m.rotation.y = G.rot; scene.add(m); });
+const cam = new THREE.PerspectiveCamera(45, 1200 / 520, 0.1, 400);
+cam.position.set(0, G.h + 3, G.dist); cam.lookAt(0, G.h, 0);
+r.render(scene, cam);
+</script>

@@ -3,6 +3,7 @@ import {
   lerpAngle, damp, clamp,
 } from './common.js';
 import { sfx } from './audio.js';
+import { makeHarvester as makeHarvesterModel } from './props.js';
 import { ui } from './ui.js';
 
 const RADIUS = 15;
@@ -66,14 +67,10 @@ export class Duel {
     return o;
   }
   makeHarvester() {
-    const g = new THREE.Group();
-    g.add(box(3, 1.6, 4.2, 0xd9363e));
-    const cab = box(1.8, 1.4, 1.6, 0x9fdcff); cab.position.set(0, 1.5, 0.6); g.add(cab);
-    this.reel = cyl(1.1, 1.1, 3.2, 0xf0b400, 12); this.reel.rotation.z = Math.PI / 2; this.reel.position.set(0, 0.5, -2.6); g.add(this.reel);
-    for (const s of [-1, 1]) { const w = cyl(0.8, 0.8, 0.5, 0x222222, 12); w.rotation.z = Math.PI / 2; w.position.set(s * 1.7, -0.2, 1); g.add(w); }
-    const wolf = makeWolf({ scale: 0.55 }); wolf.position.set(0, 1.7, 0.7); wolf.rotation.y = Math.PI; g.add(wolf);
-    const hare = makeHare(); hare.scale.setScalar(0.5); hare.position.set(0, 2.5, 0.6); hare.rotation.y = Math.PI; g.add(hare);
-    g.position.y = 0.9; return g;
+    const g = new THREE.Group(); const h = makeHarvesterModel(); g.add(h); this.reel = h.userData.reel;
+    const wolf = makeWolf({ scale: 0.55 }); wolf.position.set(0, 1.5, 0.5); wolf.rotation.y = Math.PI; g.add(wolf);
+    const hare = makeHare(); hare.scale.setScalar(0.5); hare.position.set(0, 3.05, 0.9); hare.rotation.y = Math.PI; g.add(hare);
+    return g;
   }
 
   hud() {
@@ -193,7 +190,7 @@ export class Duel {
     const m = this.vehicle ?? (this.active === 'hare' ? this.hare : this.wolf);
     if (!this.vehicle) { this.hare.visible = this.active === 'hare' && (this.invuln <= 0 || Math.floor(t * 14) % 2 === 0); this.wolf.visible = this.active === 'wolf' && (this.invuln <= 0 || Math.floor(t * 14) % 2 === 0); }
     else m.visible = this.invuln <= 0 || Math.floor(t * 14) % 2 === 0;
-    m.position.set(this.pos.x, this.vehicle ? 0.9 : 0, this.pos.z); m.rotation.y = this.vehicle ? this.face + Math.PI : this.face;
+    m.position.set(this.pos.x, 0, this.pos.z); m.rotation.y = this.vehicle ? this.face + Math.PI : this.face;
     if (this.reel) this.reel.rotation.x -= dt * 8;
     this.runPhase += dt * 12; if (!this.vehicle) animateLimbs(m, this.runPhase, len > 0 ? 0.9 : 0.05);
 
